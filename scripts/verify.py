@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print verifiable artifacts: dataset hash/size, submission head/tail, honeypot containment.
+"""Print verifiable artifacts: dataset hash/size, submission head/tail, consistency containment.
 Run:  python scripts/verify.py --candidates data/candidates.jsonl --submission outputs/submission.csv
 """
 import argparse, json, os, sys
@@ -21,14 +21,14 @@ def main():
     print("\nhead -1:", sub[0]); print("row 1  :", sub[1]); print("tail -1:", sub[-1])
     print("rows   :", len(sub) - 1)
 
-    # honeypot containment: tenure-sum > YOE  -> must be 0 in top-100
+    # consistency containment: tenure-sum > YOE  -> must be 0 in top-100
     hp = []
     for line in open(a.candidates):
         c = json.loads(line); p = c["profile"]; hist = c["career_history"]
         if sum(h.get("duration_months", 0) for h in hist) > p["years_of_experience"] * 12 + 24:
             hp.append(c["candidate_id"])
     ids = set(l.split(",")[0] for l in sub[1:])
-    print(f"\ntenure-honeypots total: {len(hp)} | in submission top-100: {len(set(hp) & ids)}")
+    print(f"\nimpossible-history profiles total: {len(hp)} | in submission top-100: {len(set(hp) & ids)}")
 
 
 if __name__ == "__main__":

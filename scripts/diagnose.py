@@ -64,9 +64,9 @@ def main():
         topk = [cid for cid, _ in bm25_ranked[:k]]
         buried = [cid for cid in topk if cid in rule_rank and rule_rank[cid] > 2000]
         strong = [cid for cid in buried if looks_strong(recs[cid])]
-        # also count BM25 top-k that are gated honeypots (absent from recs)
+        # also count BM25 top-k that were gated as inconsistent (absent from recs)
         gated = sum(1 for cid in topk if cid not in recs)
-        print(f"{k:>5} {len(buried):>18} {len(strong):>22}   (gated-honeypots in top-{k}: {gated})")
+        print(f"{k:>5} {len(buried):>18} {len(strong):>22}   (gated-inconsistent in top-{k}: {gated})")
 
     print("\n=== (2) FEATURE DOMINANCE: component vectors at key ranks ===")
     print(f"{'rank':>5} {'final':>7} {'evid':>5} {'title':>6} {'exp':>5} {'skills':>6} {'edu':>5} {'pen':>5}  title")

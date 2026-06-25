@@ -132,7 +132,7 @@ def main():
     p10 = sum(1 for t in tiers[:10] if t == 3) / 10
     hire10 = sum(1 for t in tiers[:10] if t >= 2) / 10
     hire20 = sum(1 for t in tiers[:20] if t >= 2) / min(20, len(tiers))
-    hp = sum(1 for r in results if r.get("honeypot_flag"))
+    hp = sum(1 for r in results if r.get("consistency_flag"))
 
     with open(a.out, "w") as f:
         f.write("# Recruiter-Judge Report (independent LLM judge)\n\n")
@@ -140,7 +140,7 @@ def main():
         f.write(f"- tier distribution (3/2/1/0): {dist[3]}/{dist[2]}/{dist[1]}/{dist[0]}\n")
         f.write(f"- Precision@10 (tier-3): {p10:.2f}  | hire-rate@10 (tier>=2): {hire10:.2f}  | hire-rate@20: {hire20:.2f}\n")
         f.write(f"- NDCG@10: {ndcg(tiers,10):.3f}  | NDCG@50: {ndcg(tiers,50):.3f}\n")
-        f.write(f"- honeypot flags in judged set: {hp}\n\n")
+        f.write(f"- consistency flags in judged set: {hp}\n\n")
         f.write("| rank | candidate | tier | interview | one-line |\n|---|---|---|---|---|\n")
         for r in results:
             f.write(f"| {r.get('model_rank')} | {r['candidate_id']} | {r.get('tier')} | "

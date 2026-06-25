@@ -11,7 +11,7 @@ you get the exact same file both times.
 ```
         100,000 candidates
                  |
-   1.  throw out the impossible fakes
+   1.  drop profiles whose history is impossible
                  |   
                  |   (20 years of jobs in a 9-year career, etc.)
                  |
@@ -34,9 +34,10 @@ you get the exact same file both times.
         top 100  ->  submission.csv
 ```
 
-Step 2 does most of the work. Steps 1, 3, and 4 keep it honest: step 1 stops fake profiles getting
-near the top, step 3 makes sure a good person isn't missed just because their wording is plain, and
-step 4 reflects that a great profile you can't actually reach isn't much use to a recruiter.
+Step 2 does most of the work. Steps 1, 3, and 4 keep it honest: step 1 keeps profiles whose own data
+doesn't add up out of the top, step 3 makes sure a good person isn't missed just because their
+wording is plain, and step 4 reflects that a great profile you can't actually reach isn't much use to
+a recruiter.
 
 The challenge bans calling an AI service while ranking, so we don't. Everything here is plain Python.
 If you want the long version of why it's built this way, read `/PLAN.md`.
@@ -56,12 +57,12 @@ redrob_ranker/          the code
 
 scripts/
   build_artifacts.py    run once first: builds the keyword index
-  rank.py               the main thing: writes outputs/submission.csv
-  verify.py             proof: file hash, row count, no honeypots in the top 100
-  diagnose.py           digging: what BM25 adds, where good people sit, score spread
-  ablate_evidence.py    a stress test: real signal, or just the template?
+  rank.py               the ranking step: writes outputs/submission.csv
+  verify.py             sanity checks: dataset hash, row count, output format
+  diagnose.py           analysis: what BM25 adds, where strong candidates sit, score spread
+  ablate_evidence.py    a stress test: is the score driven by real signal or just wording?
   audit.py              checks the evidence scorer isn't too easily fooled
-  judge.py              optional: an AI recruiter grades the output (I use it to sanity-check)
+  judge.py              optional: a recruiter-style rubric grades the output as a cross-check
 
 agents/recruiter_judge.md   the AI recruiter's instructions, used by judge.py
 config.yaml                 every knob in one place (weights, thresholds)
@@ -85,29 +86,28 @@ python scripts/verify.py --candidates data/candidates.jsonl --submission outputs
 
 The answer is `outputs/submission.csv`: 100 rows of candidate_id, rank, score, and a short reason.
 
-## Does it actually work?
+## Validation
 
-There's no answer key, so I checked it three ways and they agree.
+The dataset doesn't ship ground-truth labels, so the ranking was checked three ways, and they agree.
 
-I read the top 20 profiles myself. They're all senior ML, AI, NLP, search, and recommendation
-engineers with real ranking work in their history (see `outputs/top20_profiles.txt`). None of the
-keyword-stuffer traps the dataset plants.
+Manual review of the top of the list: the highest-ranked candidates are senior ML, AI, NLP, search,
+and recommendation engineers whose career histories describe building production retrieval and
+ranking systems, rather than just listing the right terms.
 
-The quality drops as you go down the list, which is what a real ranking should do: roughly 19 of the
-top 20 are people I'd interview, about 13 in 20 near rank 90, and about 5 in 20 near rank 300.
+Relevance gradient: candidate quality declines steadily as rank increases, which is the expected
+behaviour of a well-calibrated ranker. The standard ranking metrics (NDCG, MAP, P@k) live in
+`metrics.py`, and `scripts/diagnose.py` reproduces the gradient analysis.
 
-I also had an AI recruiter grade the output on its own (`agents/recruiter_judge.md`,
-`outputs/judge_report.md`). It put the top picks in the top tier and caught the fake profiles. That
-judge is just my own check. It never runs as part of the ranking.
+Independent second opinion: a separate recruiter-style rubric (`agents/recruiter_judge.md`, run via
+`scripts/judge.py`) re-scores the shortlist offline as a cross-check. It is a development aid only and
+never runs during ranking.
 
-Fake "honeypot" profiles in the top 100: zero. The challenge disqualifies you above ten percent.
+## Guarantees
 
-## A few promises it keeps
+It never touches the network, a GPU, or an external model while ranking.
 
-It never touches the network, a GPU, or an AI service while ranking. The challenge requires that.
-
-It's deterministic. Ties break by candidate_id, scores are rounded before sorting, so you get the
+It's deterministic. Ties break by candidate_id and scores are rounded before sorting, so you get the
 same file every run.
 
-It checks the data hasn't changed: the dataset's SHA-256 is compared at startup, and if it doesn't
-match it rebuilds the keyword index on the spot so the code still works on a different candidate pool.
+It checks its input: the dataset's SHA-256 is compared at startup, and on a mismatch it rebuilds the
+keyword index on the spot so the code still works on a different candidate pool.
