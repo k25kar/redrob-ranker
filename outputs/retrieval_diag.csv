@@ -1,0 +1,41 @@
+bm25_rank,candidate_id,title,yoe,bm25_score,rule_final_rank
+1,CAND_0093547,(gated/absent),0.0,54.45,>topN
+2,CAND_0019480,(gated/absent),0.0,45.12,>topN
+3,CAND_0037000,(gated/absent),0.0,42.22,>topN
+4,CAND_0071115,Recommendation Systems Engineer,16.5,40.23,930
+5,CAND_0001610,(gated/absent),0.0,39.80,>topN
+6,CAND_0051003,Senior Software Engineer (ML),4.0,38.88,1707
+7,CAND_0025971,Junior ML Engineer,5.4,36.00,753
+8,CAND_0053823,Junior ML Engineer,4.8,35.96,707
+9,CAND_0011707,Data Scientist,4.8,35.86,675
+10,CAND_0042056,AI Research Engineer,3.4,34.88,1951
+11,CAND_0007008,Senior Software Engineer (ML),3.7,34.33,779
+12,CAND_0041614,AI Specialist,3.2,34.28,1993
+13,CAND_0034645,Senior Software Engineer (ML),3.7,34.15,962
+14,CAND_0028908,Junior ML Engineer,3.1,34.03,1164
+15,CAND_0065633,Data Scientist,3.5,33.58,1881
+16,CAND_0016268,Computer Vision Engineer,3.6,33.52,2063
+17,CAND_0083637,ML Engineer,3.4,33.50,684
+18,CAND_0052030,Senior Software Engineer (ML),4.1,33.47,608
+19,CAND_0036604,ML Engineer,4.7,33.27,851
+20,CAND_0018961,AI Specialist,5.0,33.16,1027
+21,CAND_0048375,Computer Vision Engineer,4.4,33.13,692
+22,CAND_0057736,Computer Vision Engineer,6.2,33.06,601
+23,CAND_0040092,Senior Software Engineer (ML),4.4,32.98,638
+24,CAND_0089947,Junior ML Engineer,5.4,32.91,1047
+25,CAND_0088526,Senior Software Engineer (ML),4.6,32.90,872
+26,CAND_0079688,Senior Software Engineer (ML),3.3,32.67,1140
+27,CAND_0093401,AI Specialist,6.0,32.66,876
+28,CAND_0038206,Data Scientist,3.5,32.30,636
+29,CAND_0091348,Senior Software Engineer (ML),3.7,32.24,1357
+30,CAND_0015057,ML Engineer,4.6,32.21,982
+31,CAND_0043125,Senior Software Engineer (ML),5.3,32.08,665
+32,CAND_0007596,Junior ML Engineer,4.4,31.92,768
+33,CAND_0052400,Computer Vision Engineer,3.6,31.84,784
+34,CAND_0012632,AI Specialist,6.0,31.81,844
+35,CAND_0061696,Senior Software Engineer (ML),3.5,31.78,664
+36,CAND_0075981,Junior ML Engineer,3.3,31.73,53783
+37,CAND_0057166,ML Engineer,3.3,31.62,1272
+38,CAND_0062707,Senior Software Engineer (ML),5.6,31.60,653
+39,CAND_0034849,AI Research Engineer,3.1,31.59,811
+40,CAND_0082618,Data Scientist,3.7,31.56,8775

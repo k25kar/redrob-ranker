@@ -1,0 +1,40 @@
+# Redrob ranker configuration. All tunables live here so the code stays declarative.
+paths:
+  candidates: "data/candidates.jsonl"        # symlink or copy; not committed (487 MB)
+  artifacts_dir: "artifacts"
+  outputs_dir: "outputs"
+
+integrity:
+  expected_sha256: "de7b8cae39a9f9378a2cd4f8153bfc1f84960bce0ae520f263423d129df4b335"
+  # if the candidates file hash != expected -> fallback mode (build BM25 at runtime, disable dense)
+
+role_profile:
+  experience_years: {min: 5, max: 9}
+  seniority: "senior"
+
+# Rule-score component weights (embedding-free). Evidence dominates per design + reviewer feedback.
+weights:
+  evidence: 0.45      # IR/ranking/recsys evidence in career prose  (decisive)
+  title:    0.22      # title + trajectory fit
+  exp:      0.13      # experience band (5-9 soft)
+  skills:   0.12      # skills corroboration (discounted on inconsistency)
+  edu:      0.08      # education tier
+
+penalties:            # SOFT only (never removal); total capped
+  cap: 0.35
+  consulting_only: 0.18
+  expert_at_zero:  0.15
+  cv_speech_robotics_no_nlp: 0.12
+  research_only_no_prod: 0.10
+  title_chaser: 0.08
+  seniority_mismatch: 0.10   # junior/intern title for a senior role
+
+behavioral:                  # graded, bounded availability penalty (no cliff)
+  floor: 0.78                # worst-case multiplier for a fully-unreachable candidate
+  reach_threshold: 0.40      # availability >= this => no penalty; below => smooth scale to floor
+
+retrieval:
+  rerank_pool: 400    # union(rule_topN, bm25_topN) fed to the cross-encoder (rung 3)
+  bm25_topN: 600
+  rule_topN: 600
+  rrf_k: 60

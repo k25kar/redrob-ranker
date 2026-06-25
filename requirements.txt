@@ -1,0 +1,10 @@
+# Ranking step (rank.py) is stdlib-only by design — no third-party deps required to reproduce.
+# PyYAML is used only to read config.yaml (a 1-line fallback parser is included if absent).
+PyYAML>=6.0
+
+# Offline-only (precompute.py, not the ranking step): used to embed candidates once on a free GPU.
+# Commented out so the runtime install stays minimal; uncomment for the offline embedding step.
+# sentence-transformers>=2.2
+# torch>=2.0
+# Cross-encoder rerank (rung 3) — local CPU, no API:
+# (the model is downloaded once and cached/committed)

@@ -1,0 +1,4 @@
+bm25_rank,candidate_id,title,yoe,rule_rank,evidence,title_fit,exp,skills,penalty
+52,CAND_0065195,Search Engineer,5.1,232,0.75,1.00,1.00,0.50,0.08
+93,CAND_0039838,Recommendation Systems Engineer,4.9,204,0.78,1.00,0.88,0.67,0.08
+98,CAND_0040820,Senior Software Engineer (ML),5.5,422,0.39,0.80,1.00,0.83,0.00
