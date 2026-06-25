@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Ranking step (CPU-only, no network, deterministic). Rungs 1-2: rule score + BM25 recall.
+"""Ranking step (CPU-only, no network, deterministic). Rungs 1-3: rule score + BM25 recall +
+deterministic fusion over the rerank pool.
 
 Pipeline:
   load candidates -> rule_score(all 100K) -> hard gate (exclude impossible) -> behavioral blend
-  -> BM25 recall pool (rung 2) -> [cross-encoder rerank = rung 3, TODO] -> submission.csv
+    -> BM25 recall pool (rung 2) -> fusion over the rerank pool (rung 3) -> submission.csv
 
-BM25 currently feeds the rerank POOL + a recall diagnostic; it does not change the final order
-until the cross-encoder (rung 3) is wired in. This is the ablation discipline: add, measure, keep.
+BM25 feeds the rerank pool and contributes to the final order for candidates in that pool.
+The fusion is deterministic and explainable, so we keep the stage-3 behavior operational rather
+than aspirational.
 
 Run: python scripts/rank.py --candidates data/candidates.jsonl --config config.yaml
 """
 import argparse, csv, json, os, sys, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from redrob_ranker.conf import load_config, sha256_file
-from redrob_ranker.scoring import rule_score, final_score
+from redrob_ranker.scoring import percentile_norm, rule_score, final_score
 from redrob_ranker.gates import is_impossible
 from redrob_ranker.retrieval import BM25, rrf_fuse
 from redrob_ranker.schema import candidate_text
@@ -117,28 +119,35 @@ def main():
     rule_topN_ids = set(cid for cid, _ in rule_list)
     bm25_only = [(cid, s) for cid, s in bm25_ranked if cid not in rule_topN_ids][:40]
 
-    # --- final ranking (rung 1-2: rule score; rung 3 cross-encoder will rerank pool_ids) ---
-    final_rows = sorted(((cid, round(fs, 4), comps, pen, reasons)
-                         for cid, fs, comps, pen, reasons in rows),
-                        key=lambda x: (-x[1], x[0]))   # score desc, candidate_id asc
+    # --- stage-3 fusion: deterministic blend of rule score + BM25 for the rerank pool ---
+    rule_norm = percentile_norm({cid: fs for cid, fs, _c, _p, _r in rows})
+    bm25_norm = percentile_norm({cid: s for cid, s in bm25_ranked}) if bm25_ranked else {}
+    fused_rows = []
+    for cid, fs, comps, pen, reasons in rows:
+        fused = rule_norm[cid]
+        if cid in pool_ids:
+            fused = 0.88 * rule_norm[cid] + 0.12 * bm25_norm.get(cid, 0.0)
+        fused_rows.append((cid, round(fused, 4), round(fs, 4), comps, pen, reasons))
+
+    final_rows = sorted(fused_rows, key=lambda x: (-x[1], -x[2], x[0]))   # fused desc, rule desc, candidate_id asc
     top = final_rows[:100]
 
     sub_path = os.path.join(out, "submission.csv")
     with open(sub_path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["candidate_id", "rank", "score", "reasoning"])
-        for rank, (cid, s, comps, pen, reasons) in enumerate(top, 1):
+        for rank, (cid, s, rule_s, comps, pen, reasons) in enumerate(top, 1):
             title, yoe, resp, phrases = meta[cid]
             w.writerow([cid, rank, f"{s:.4f}", build_reasoning_meta(title, yoe, resp, comps, reasons, phrases)])
 
     insp_path = os.path.join(out, "top50_inspect.csv")
     with open(insp_path, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["rank", "candidate_id", "title", "yoe", "score",
+        w.writerow(["rank", "candidate_id", "title", "yoe", "score", "rule_raw",
                     "evidence", "title_fit", "exp", "skills", "edu", "penalty", "in_bm25_pool", "reasons"])
-        for rank, (cid, s, cm, pen, reasons) in enumerate(top[:50], 1):
+        for rank, (cid, s, rule_s, cm, pen, reasons) in enumerate(top[:50], 1):
             title, yoe, _, _ = meta[cid]
-            w.writerow([rank, cid, title, f"{yoe:.1f}", f"{s:.4f}",
+            w.writerow([rank, cid, title, f"{yoe:.1f}", f"{s:.4f}", f"{rule_s:.4f}",
                         f"{cm['evidence']:.2f}", f"{cm['title']:.2f}", f"{cm['exp']:.2f}",
                         f"{cm['skills']:.2f}", f"{cm['edu']:.2f}", f"{pen:.2f}",
                         "Y" if cid in pool_ids else "N", "|".join(reasons)])

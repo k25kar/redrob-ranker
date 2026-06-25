@@ -3,8 +3,7 @@
 Picks the best 100 people out of 100,000 for the Redrob "Senior AI Engineer (Founding Team)" role.
 It judges candidates on the work they've actually done, not on how many buzzwords they list.
 
-It runs on a normal laptop in about 17 seconds. No GPU, no internet, no API keys. Run it twice and
-you get the exact same file both times.
+It runs on a normal laptop in about 17 seconds. No GPU, no internet, no API keys. Run it twice and you get the exact same file both times.
 
 ## How it works
 
@@ -20,8 +19,8 @@ you get the exact same file both times.
                  |   
                  |   (title, seniority, experience, skills back it up)
                  |
-   3.  widen the net with a keyword search
-       so nobody strong slips past
+     3.  widen the net with a keyword search
+       and fuse it into the rerank pool
                  |
                  |
                  |
@@ -35,9 +34,9 @@ you get the exact same file both times.
 ```
 
 Step 2 does most of the work. Steps 1, 3, and 4 keep it honest: step 1 keeps profiles whose own data
-doesn't add up out of the top, step 3 makes sure a good person isn't missed just because their
-wording is plain, and step 4 reflects that a great profile you can't actually reach isn't much use to
-a recruiter.
+doesn't add up out of the top, step 3 broadens recall and feeds a deterministic fusion stage so a good
+person isn't missed just because their wording is plain, and step 4 reflects that a great profile you
+can't actually reach isn't much use to a recruiter.
 
 The challenge bans calling an AI service while ranking, so we don't. Everything here is plain Python.
 If you want the long version of why it's built this way, read `/PLAN.md`.
@@ -57,7 +56,7 @@ redrob_ranker/          the code
 
 scripts/
   build_artifacts.py    run once first: builds the keyword index
-  rank.py               the ranking step: writes outputs/submission.csv
+  rank.py               the ranking step: writes outputs/submission.csv using rule+BM25 fusion
   verify.py             sanity checks: dataset hash, row count, output format
   diagnose.py           analysis: what BM25 adds, where strong candidates sit, score spread
   ablate_evidence.py    a stress test: is the score driven by real signal or just wording?

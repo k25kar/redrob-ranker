@@ -24,8 +24,9 @@ Everyone is scored, then the list is trimmed. The flow:
 2. **Score the real work.** The main signal is the evidence in a person's career history of building
    production retrieval, ranking, and recommendation systems. Title, seniority, years of experience,
    and listed skills support that signal but don't drive it on their own.
-3. **Widen the net.** A lightweight keyword search runs alongside the scorer so a strong candidate
-   isn't overlooked just because their write-up is plainly worded.
+3. **Widen the net and fuse it back in.** A lightweight keyword search runs alongside the scorer,
+  then gets fused into the rerank pool so a strong candidate isn't overlooked just because their
+  write-up is plainly worded.
 4. **Account for reachability.** Someone who never replies to recruiters or hasn't been active in
    months is a weaker bet in practice, so their score is eased down. The effect is small and capped,
    so it nudges the order without burying a genuinely strong match.
