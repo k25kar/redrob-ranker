@@ -1,6 +1,7 @@
-"""Redrob candidate ranker — embedding-free rule scorer + BM25 retrieval (+ cross-encoder rerank, rung 3).
+"""Redrob candidate ranker.
 
-See FINAL_IMPLEMENTATION_PLAN.md §0 for the authoritative design.
-The ranking step is deterministic, CPU-only, and makes no network calls.
+An interpretable, embedding-free scorer that ranks candidates for a job description by the
+evidence of relevant work in their history. The ranking step is deterministic, CPU-only, and
+makes no network calls. See PLAN.md for the approach.
 """
-__version__ = "0.2.0"
+__version__ = "1.0.0"

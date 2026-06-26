@@ -6,15 +6,15 @@ paths:
 
 integrity:
   expected_sha256: "de7b8cae39a9f9378a2cd4f8153bfc1f84960bce0ae520f263423d129df4b335"
-  # if the candidates file hash != expected -> fallback mode (build BM25 at runtime, disable dense)
+  # informational: if the candidates file hash differs, the ranker warns and proceeds.
 
 role_profile:
   experience_years: {min: 5, max: 9}
   seniority: "senior"
 
-# Rule-score component weights (embedding-free). Evidence dominates per design + reviewer feedback.
+# Rule-score component weights (embedding-free). Evidence of real work dominates by design.
 weights:
-  evidence: 0.45      # IR/ranking/recsys evidence in career prose  (decisive)
+  evidence: 0.45      # retrieval/ranking/recsys evidence in career prose  (decisive)
   title:    0.22      # title + trajectory fit
   exp:      0.13      # experience band (5-9 soft)
   skills:   0.12      # skills corroboration (discounted on inconsistency)
@@ -33,8 +33,23 @@ behavioral:                  # graded, bounded availability penalty (no cliff)
   floor: 0.78                # worst-case multiplier for a fully-unreachable candidate
   reach_threshold: 0.40      # availability >= this => no penalty; below => smooth scale to floor
 
-retrieval:
-  rerank_pool: 400    # union(rule_topN, bm25_topN) fed to the cross-encoder (rung 3)
-  bm25_topN: 600
-  rule_topN: 600
-  rrf_k: 60
+quality_tiebreak:            # refine ordering WITHIN near-tied strong candidates by JD-stated quality
+  enabled: true              # signals (eval rigor, seniority, ownership, measurable impact).
+  lambda: 0.05               # small weight: only flips candidates whose fit scores are within ~0.04.
+                             # keeps the emitted score monotone and never crosses fit tiers.
+
+context_fit:                 # location + notice fit. JD: "Pune/Noida-preferred but FLEXIBLE",
+  enabled: true              # "open to relocation from Tier-1 Indian cities". So India location is
+  preferred_cities: [pune, noida]   # near-neutral; only foreign-no-relocate is a real concern, and
+  ok_india_cities: [bangalore, bengaluru, hyderabad, mumbai, delhi, gurgaon, gurugram, chennai]
+  loc_preferred: 1.00        # Pune/Noida
+  loc_ok_or_relocate: 1.00   # any big India hub, or willing to relocate -> treated equal (JD is flexible)
+  loc_other_india: 0.99      # elsewhere in India -> only a hair below (JD: flexible / hybrid)
+  loc_foreign_relocate: 0.90 # outside India but willing to relocate
+  loc_foreign_norelocate: 0.70  # outside India, won't relocate (no visa sponsorship for a hybrid role)
+  notice_30: 1.00            # JD: 30+ "still in scope, bar gets higher" -> gentle tiebreaker only
+  notice_60: 0.99
+  notice_90: 0.97
+  notice_long: 0.95          # >90 days; worst-case India haircut is now ~6%, not 17%
+  verification_weight: 0.04  # identity verification (email/phone/linkedin): a fully-unverified
+                             # profile loses at most 4%; fully verified loses nothing. Trust + reach.

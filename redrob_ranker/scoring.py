@@ -1,8 +1,8 @@
-"""Rule score (RAW, embedding-free) + behavioral blend + final-combine helpers.
+"""Rule score (embedding-free) plus the bounded availability/location adjustment.
 
-IMPORTANT (reviewer fix): the rules-only score is the RAW weighted composite, which has natural
-separation. We do NOT percentile-normalize it for the rules-only ranking — percentile-normalization
-is reserved for the rung-3 fusion of rule⊕cross-encoder (different scales), per FINAL_IMPLEMENTATION_PLAN §0.
+The rule score is a weighted sum of interpretable components (evidence, title, experience, skills,
+education) with soft penalties. The final score applies a small, capped availability and
+location/verification adjustment. Both keep their natural spread, so the ranking is explainable.
 """
 from __future__ import annotations
 from . import features as F
@@ -28,18 +28,15 @@ def rule_score(c: dict, cfg: dict) -> dict:
     return {"raw": max(0.0, raw - pen), "comps": comps, "penalty": pen, "reasons": reasons}
 
 
-def final_score(rule_raw: float, rs: dict, cfg: dict) -> float:
-    """Graded availability penalty on the RAW (spread-preserving) rule score.
+def final_score(rule_raw: float, rs: dict, cfg: dict, profile: dict = None) -> float:
+    """Bounded availability + location/notice fit on the RAW (spread-preserving) rule score.
 
-    score = rule_raw * availability_multiplier   (multiplier in [floor, 1.0]).
-    One clean behavioral mechanism — no additive blend, no binary cliff.
+    score = rule_raw * availability_multiplier * context_multiplier
+    Both multipliers are capped near 1.0, so they reorder near-ties and ease down clear mismatches
+    without burying a strong technical fit. profile is optional for backward compatibility.
     """
     b = cfg["behavioral"]
-    return rule_raw * B.availability_multiplier(rs, b["floor"], b["reach_threshold"])
-
-
-def percentile_norm(scores: dict) -> dict:
-    """Map id->score to id->percentile in [0,1] (used ONLY for rung-3 rule⊕CE fusion)."""
-    order = sorted(scores, key=lambda k: scores[k])
-    m = len(order)
-    return {cid: (i / (m - 1) if m > 1 else 1.0) for i, cid in enumerate(order)}
+    s = rule_raw * B.availability_multiplier(rs, b["floor"], b["reach_threshold"])
+    if profile is not None:
+        s *= B.context_multiplier(profile, rs, cfg)
+    return s

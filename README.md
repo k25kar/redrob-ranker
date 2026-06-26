@@ -1,9 +1,10 @@
 # Redrob Ranker
 
 Picks the best 100 people out of 100,000 for the Redrob "Senior AI Engineer (Founding Team)" role.
-It judges candidates on the work they've actually done, not on how many buzzwords they list.
+It judges candidates on the work they have actually done, not on how many of the right terms they list.
 
-It runs on a normal laptop in about 17 seconds. No GPU, no internet, no API keys. Run it twice and you get the exact same file both times.
+It runs on a normal laptop in about 20 seconds. No GPU, no internet, no API keys. Run it twice and you
+get the exact same file both times.
 
 ## How it works
 
@@ -11,35 +12,30 @@ It runs on a normal laptop in about 17 seconds. No GPU, no internet, no API keys
         100,000 candidates
                  |
    1.  drop profiles whose history is impossible
-                 |   
                  |   (20 years of jobs in a 9-year career, etc.)
                  |
    2.  score the real search / ranking / recsys
        work in each person's history
-                 |   
                  |   (title, seniority, experience, skills back it up)
                  |
-     3.  widen the net with a keyword search
-       and fuse it into the rerank pool
+   3.  ease down people who never reply, went quiet
+       months ago, or are hard to reach or place
+                 |   (availability + location + verified identity)
                  |
-                 |
-                 |
-   4.  ease down people who never reply
-       or went quiet months ago
-                 |
-                 |
+   4.  break near-ties by the qualities the role values:
+       evaluation rigor, seniority, ownership, impact
                  |
                  v
         top 100  ->  submission.csv
 ```
 
-Step 2 does most of the work. Steps 1, 3, and 4 keep it honest: step 1 keeps profiles whose own data
-doesn't add up out of the top, step 3 broadens recall and feeds a deterministic fusion stage so a good
-person isn't missed just because their wording is plain, and step 4 reflects that a great profile you
-can't actually reach isn't much use to a recruiter.
+Step 2 does most of the work. Step 1 keeps profiles whose own data does not add up out of the top.
+Step 3 reflects that a strong profile you cannot actually reach or place is less useful to a recruiter.
+Step 4 separates strong candidates the fit score sees as nearly equal, using the signals the job
+description prioritises. Steps 1, 3, and 4 are small, bounded adjustments.
 
-The challenge bans calling an AI service while ranking, so we don't. Everything here is plain Python.
-If you want the long version of why it's built this way, read `/PLAN.md`.
+The challenge forbids calling an external model while ranking, so we do not. Everything here is plain
+Python. The longer write-up of the approach is in `PLAN.md`.
 
 ## What's in here
 
@@ -47,27 +43,19 @@ If you want the long version of why it's built this way, read `/PLAN.md`.
 redrob_ranker/          the code
   schema.py             reads the candidates; -1 means "no data", not "worst score"
   features.py           the signals: evidence, title, seniority, experience, skills, education
-  gates.py              the impossible-profile filter, plus soft penalties (consulting, etc.)
-  behavioral.py         how reachable someone is (small effect, capped)
-  scoring.py            puts the pieces together into one score
-  retrieval.py          a small BM25 keyword search, no outside libraries
-  metrics.py            NDCG@10/50, MAP, P@10, for checking quality offline
+  gates.py              the impossible-profile filter, plus soft penalties
+  behavioral.py         availability + location/notice + identity verification (small, capped)
+  quality.py            near-tie refinement by role-relevant signals (eval rigor, seniority, impact)
+  scoring.py            combines the pieces into one score
   conf.py               reads config.yaml
 
 scripts/
-  build_artifacts.py    run once first: builds the keyword index
-  rank.py               the ranking step: writes outputs/submission.csv using rule+BM25 fusion
+  rank.py               the ranking step: writes outputs/submission.csv  (this is all you need)
   verify.py             sanity checks: dataset hash, row count, output format
-  diagnose.py           analysis: what BM25 adds, where strong candidates sit, score spread
-  ablate_evidence.py    a stress test: is the score driven by real signal or just wording?
-  audit.py              checks the evidence scorer isn't too easily fooled
-  judge.py              optional: a recruiter-style rubric grades the output as a cross-check
 
-agents/recruiter_judge.md   the AI recruiter's instructions, used by judge.py
-config.yaml                 every knob in one place (weights, thresholds)
-data/                       drop candidates.jsonl here (too big to commit, 487 MB)
-artifacts/                  the generated index lives here (rebuilt by the script)
-outputs/                    submission.csv and the analysis files
+config.yaml             every knob in one place (weights, thresholds)
+data/                   put candidates.jsonl here (not committed, ~487 MB)
+outputs/                submission.csv
 ```
 
 ## Running it
@@ -78,35 +66,19 @@ pip install -r requirements.txt        # only PyYAML; the ranking itself needs n
 # download candidates.jsonl from the challenge, then point the code at it
 ln -s /path/to/candidates.jsonl data/candidates.jsonl
 
-python scripts/build_artifacts.py --candidates data/candidates.jsonl   # once, ~15s
-python scripts/rank.py            --candidates data/candidates.jsonl   # ~17s, writes the submission
+python scripts/rank.py   --candidates data/candidates.jsonl   # ~20s, writes outputs/submission.csv
 python scripts/verify.py --candidates data/candidates.jsonl --submission outputs/submission.csv
 ```
 
 The answer is `outputs/submission.csv`: 100 rows of candidate_id, rank, score, and a short reason.
-
-## Validation
-
-The dataset doesn't ship ground-truth labels, so the ranking was checked three ways, and they agree.
-
-Manual review of the top of the list: the highest-ranked candidates are senior ML, AI, NLP, search,
-and recommendation engineers whose career histories describe building production retrieval and
-ranking systems, rather than just listing the right terms.
-
-Relevance gradient: candidate quality declines steadily as rank increases, which is the expected
-behaviour of a well-calibrated ranker. The standard ranking metrics (NDCG, MAP, P@k) live in
-`metrics.py`, and `scripts/diagnose.py` reproduces the gradient analysis.
-
-Independent second opinion: a separate recruiter-style rubric (`agents/recruiter_judge.md`, run via
-`scripts/judge.py`) re-scores the shortlist offline as a cross-check. It is a development aid only and
-never runs during ranking.
+No pre-build step is needed; the ranker uses no index or external model.
 
 ## Guarantees
 
 It never touches the network, a GPU, or an external model while ranking.
 
-It's deterministic. Ties break by candidate_id and scores are rounded before sorting, so you get the
+It is deterministic. Ties break by candidate_id and scores are rounded before sorting, so you get the
 same file every run.
 
-It checks its input: the dataset's SHA-256 is compared at startup, and on a mismatch it rebuilds the
-keyword index on the spot so the code still works on a different candidate pool.
+It checks its input: the dataset's SHA-256 is compared at startup and warns if the pool differs from
+the one it was configured for. The rule score works on any candidate pool, so nothing else is needed.

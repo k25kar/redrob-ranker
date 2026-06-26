@@ -54,6 +54,6 @@ def soft_penalties(c: dict, cfg: dict) -> tuple[float, list]:
     durs = [h.get("duration_months", 0) for h in hist if not h.get("is_current")]
     if durs and sum(durs) / len(durs) < 16:
         pen += P["title_chaser"]; reasons.append("short avg tenure (title-chaser signal)")
-    if is_junior_title(p) and p.get("years_of_experience", 0) < cfg["role_profile"]["experience_years"]["min"]:
-        pen += P["seniority_mismatch"]; reasons.append("junior title below role seniority")
+    if is_junior_title(p):   # a "Junior/Intern/Associate" title is a seniority mismatch for a senior/founding role, at any YoE
+        pen += P["seniority_mismatch"]; reasons.append("junior/associate title vs senior role")
     return min(pen, P["cap"]), reasons

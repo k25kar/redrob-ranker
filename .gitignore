@@ -1,25 +1,14 @@
-# --- Data (487 MB; never commit) ---
+# Data (large; never commit)
 data/candidates.jsonl
 candidates.jsonl
-outputs/candidates.jsonl
 
-# --- Generated artifacts (rebuilt by scripts/build_artifacts.py; hash lives in config.yaml) ---
+# Generated locally; only the final submission is committed
 artifacts/*
 !artifacts/.gitkeep
-
-# --- Outputs: commit only the final submission. The analysis files (judge report, rank buckets,
-#     profile dumps, diagnostics) are personal/internal and would expose strategy + candidate data. ---
 outputs/*
 !outputs/submission.csv
-outputs/.judge_cache/
 
-# --- Stray duplicates left at repo root (canonical copies live in redrob_ranker/ and outputs/) ---
-/submission.csv
-/top50_inspect.csv
-/metrics.py
-/rank_baseline.py
-
-# --- Python ---
+# Python
 __pycache__/
 *.pyc
 .venv/

@@ -1,9 +1,9 @@
 """Typed-ish access to the candidate schema + safe handling of sentinels/missing fields.
 
-Empirically (measured on the released 100K):
-    github_activity_score == -1  -> 64.6% of candidates  (means "no GitHub linked", NOT "worst")
-    offer_acceptance_rate == -1  -> 59.6%                 (means "no offer history",  NOT "worst")
-Treating -1 as a low score would wreck ~60% of the pool. We map -1 -> None (missing) here.
+Some signals use -1 to mean "no data" rather than a real value:
+    github_activity_score == -1  means "no GitHub linked", not "worst"
+    offer_acceptance_rate == -1  means "no offer history", not "worst"
+Treating -1 as a low score would unfairly penalise these candidates, so we map -1 -> None (missing).
 """
 from __future__ import annotations
 import json

@@ -20,6 +20,14 @@ def load_config(path: str) -> dict:
                       "cv_speech_robotics_no_nlp": 0.12, "research_only_no_prod": 0.10,
                       "title_chaser": 0.08, "seniority_mismatch": 0.10},
         "behavioral": {"floor": 0.78, "reach_threshold": 0.40},
+        "quality_tiebreak": {"enabled": True, "lambda": 0.05},
+        "context_fit": {"enabled": True, "preferred_cities": ["pune", "noida"],
+                         "ok_india_cities": ["bangalore", "bengaluru", "hyderabad", "mumbai",
+                                             "delhi", "gurgaon", "gurugram", "chennai"],
+                         "loc_preferred": 1.00, "loc_ok_or_relocate": 1.00, "loc_other_india": 0.99,
+                         "loc_foreign_relocate": 0.90, "loc_foreign_norelocate": 0.70,
+                         "notice_30": 1.00, "notice_60": 0.99, "notice_90": 0.97, "notice_long": 0.95,
+                         "verification_weight": 0.04},
         "retrieval": {"rerank_pool": 400, "bm25_topN": 600, "rule_topN": 600, "rrf_k": 60},
     }
 
