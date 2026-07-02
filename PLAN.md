@@ -23,7 +23,12 @@ Everyone is scored, then the list is trimmed. The flow:
    never reach the top.
 2. **Score the real work.** The main signal is the evidence in a person's career history of building
    production retrieval, ranking, and recommendation systems. Title, seniority, years of experience,
-   and listed skills support that signal but do not drive it on their own.
+   and listed skills support that signal but do not drive it on their own. Two details matter here:
+   an identical description pasted into several roles counts as evidence once, not once per role
+   (about a third of the pool does this), and the evidence vocabulary includes plain-language IR
+   phrasing ("relevance", "user intent", "re-ranking", "discovery feed"), so a staff engineer who
+   writes "how the most relevant results appear for each user's intent" scores like the retrieval
+   engineer they are, not like a keyword miss.
 3. **Account for reachability, location, and trust.** Someone who never replies to recruiters or has
    not been active in months is a weaker bet in practice; the role is a Pune/Noida hybrid in India;
    and a verified, reachable profile is a stronger lead than an unverified one. Availability, location,
@@ -55,9 +60,13 @@ accuracy on a single job description.
 
 The score combines a handful of components, all computed from the profile itself:
 
-- evidence of retrieval / ranking / recommendation work in the career history (the largest weight)
+- evidence of retrieval / ranking / recommendation work in the career history (the largest weight);
+  duplicated role descriptions are counted once, and plain-language IR phrasing counts alongside
+  buzzwords
 - how well the current and recent titles fit the role, with seniority taken into account
-- years of experience, centered on the band the role asks for
+- years of experience, centered on the band the role asks for; going well past the band (11y+) draws
+  a small, capped penalty, since the JD explicitly screens out long-tenured architecture-drift
+  profiles who no longer write production code
 - listed skills, used as corroboration and discounted when they look inconsistent with the rest of the profile
 - education, as a minor factor
 - reachability, location, and identity verification, applied as small, capped adjustments

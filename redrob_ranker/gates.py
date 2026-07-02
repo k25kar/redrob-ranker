@@ -51,9 +51,21 @@ def soft_penalties(c: dict, cfg: dict) -> tuple[float, list]:
         pen += P["cv_speech_robotics_no_nlp"]; reasons.append("CV/speech/robotics without NLP/IR")
     if "research" in t and not any(k in pr for k in PROD):
         pen += P["research_only_no_prod"]; reasons.append("research-only, no production signal")
-    durs = [h.get("duration_months", 0) for h in hist if not h.get("is_current")]
+    # Title-chaser: short average tenure across ALL roles, current included. A candidate 3+ years
+    # into their current role is the opposite of a job-hopper, whatever their early tenures were.
+    durs = [h.get("duration_months", 0) for h in hist]
     if durs and sum(durs) / len(durs) < 16:
         pen += P["title_chaser"]; reasons.append("short avg tenure (title-chaser signal)")
     if is_junior_title(p):   # a "Junior/Intern/Associate" title is a seniority mismatch for a senior/founding role, at any YoE
         pen += P["seniority_mismatch"]; reasons.append("junior/associate title vs senior role")
+    # Over-band experience: JD asks 5-9y and explicitly screens out long-tenured "architecture drift"
+    # profiles. Every hand-labeled candidate above the start threshold is tier 0-1, so this ramp is
+    # label-validated. Soft and capped: eases down, never removes.
+    ox = P.get("overexperience")
+    if ox:
+        yoe = p.get("years_of_experience", 0)
+        over = max(0.0, yoe - ox["start_years"])
+        if over > 0:
+            opn = min(ox["cap"], ox["per_year"] * over)
+            pen += opn; reasons.append(f"{yoe:.0f}y well over the 5-9y band (architect-drift risk)")
     return min(pen, P["cap"]), reasons

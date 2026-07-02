@@ -3,7 +3,7 @@
 Picks the best 100 people out of 100,000 for the Redrob "Senior AI Engineer (Founding Team)" role.
 It judges candidates on the work they have actually done, not on how many of the right terms they list.
 
-It runs on a normal laptop in about 20 seconds. No GPU, no internet, no API keys. Run it twice and you
+It runs on a normal laptop in under a minute. No GPU, no internet, no API keys. Run it twice and you
 get the exact same file both times.
 
 ## How it works
@@ -29,7 +29,10 @@ get the exact same file both times.
         top 100  ->  submission.csv
 ```
 
-Step 2 does most of the work. Step 1 keeps profiles whose own data does not add up out of the top.
+Step 2 does most of the work, and it reads carefully: an identical paragraph pasted into three jobs
+counts as evidence once, not three times, and plain-language descriptions of ranking work ("how the
+most relevant results appear for each user's intent") score alongside buzzword-dense ones.
+Step 1 keeps profiles whose own data does not add up out of the top.
 Step 3 reflects that a strong profile you cannot actually reach or place is less useful to a recruiter.
 Step 4 separates strong candidates the fit score sees as nearly equal, using the signals the job
 description prioritises. Steps 1, 3, and 4 are small, bounded adjustments.
@@ -66,7 +69,7 @@ pip install -r requirements.txt        # only PyYAML; the ranking itself needs n
 # download candidates.jsonl from the challenge, then point the code at it
 ln -s /path/to/candidates.jsonl data/candidates.jsonl
 
-python scripts/rank.py   --candidates data/candidates.jsonl   # ~20s, writes outputs/submission.csv
+python scripts/rank.py   --candidates data/candidates.jsonl   # ~40s, writes outputs/submission.csv
 python scripts/verify.py --candidates data/candidates.jsonl --submission outputs/submission.csv
 ```
 

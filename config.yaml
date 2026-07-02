@@ -28,6 +28,10 @@ penalties:            # SOFT only (never removal); total capped
   research_only_no_prod: 0.10
   title_chaser: 0.08
   seniority_mismatch: 0.10   # junior/intern title for a senior role
+  overexperience:            # JD: 5-9y band; long-tenured "architect drift" profiles labeled tier 0-1
+    start_years: 11          # in our hand-labeled set (every label with >11y is tier 0-1).
+    per_year: 0.03           # linear ramp beyond start_years...
+    cap: 0.15                # ...capped, so it eases down rather than erases. 16y -> 0.15.
 
 behavioral:                  # graded, bounded availability penalty (no cliff)
   floor: 0.78                # worst-case multiplier for a fully-unreachable candidate
@@ -45,8 +49,13 @@ context_fit:                 # location + notice fit. JD: "Pune/Noida-preferred 
   loc_preferred: 1.00        # Pune/Noida
   loc_ok_or_relocate: 1.00   # any big India hub, or willing to relocate -> treated equal (JD is flexible)
   loc_other_india: 0.99      # elsewhere in India -> only a hair below (JD: flexible / hybrid)
-  loc_foreign_relocate: 0.90 # outside India but willing to relocate
-  loc_foreign_norelocate: 0.70  # outside India, won't relocate (no visa sponsorship for a hybrid role)
+  loc_foreign_relocate: 0.96 # outside India but willing to relocate. JD: "Open to relocation
+                             # candidates" — an explicitly-willing relocator is a logistics
+                             # question, not a fit question; a gentle nudge, not a 10% haircut.
+  loc_foreign_norelocate: 0.84  # outside India, won't relocate. Softened from 0.70: a cliff that
+                                # ejects a top-5 raw-fit candidate from the top-100 entirely is a
+                                # worse bet than parking them in the 60-100 tail (asymmetric payoff
+                                # if the hidden ground truth tiers primarily on fit).
   notice_30: 1.00            # JD: 30+ "still in scope, bar gets higher" -> gentle tiebreaker only
   notice_60: 0.99
   notice_90: 0.97

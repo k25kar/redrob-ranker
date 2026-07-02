@@ -1,10 +1,11 @@
 """Embedding-free features (the decisive, explainable signals).
 
-All return values are in [0,1]. NO embedding/semantic terms here — semantic matching is
-confined to retrieval and the cross-encoder (FINAL_IMPLEMENTATION_PLAN.md §0).
+All return values are in [0,1]. Every signal is computed directly from the profile text and fields,
+so each contribution can be read and explained. See PLAN.md for the approach.
 """
 from __future__ import annotations
 import math
+import re
 from .schema import prose
 
 # Title -> fit weight for the Senior AI Engineer (search/ranking/recsys) role.
@@ -22,6 +23,8 @@ AI_TITLES = {
 }
 JUNIOR = ("junior", "intern", "trainee", "associate", "fresher", "graduate engineer")
 ML_TOKENS = ("ml", "machine learning", "ai", "deep learning", "nlp", "(ml)", "(ai)")
+# match ML/AI tokens as whole words, so short ones ("ml", "ai") don't hit inside "html", "retail", etc.
+_ML_TOKEN_RE = re.compile(r"(?<![a-z])(" + "|".join(re.escape(t) for t in ML_TOKENS) + r")(?![a-z])")
 
 EVIDENCE = [
     "recommendation", "recommender", "ranking", "retrieval", "embedding", "vector search",
@@ -29,6 +32,11 @@ EVIDENCE = [
     "information retrieval", "personalization", "candidate ranking", "bm25", "faiss",
     "pinecone", "elasticsearch", "opensearch", "qdrant", "weaviate", "ndcg", "mrr",
     "a/b test", "ab test", "click-through", "ctr", "matching",
+    # plain-language IR vocabulary: strong candidates who describe search/ranking work without
+    # buzzwords ("how the most relevant results appear for each user's intent"). Standard IR
+    # terms, added after a rank-11-160 audit surfaced described-in-plain-words sleepers.
+    "relevance", "relevant results", "re-rank", "reranker", "user intent",
+    "query understanding", "discovery feed", "search and discovery", "offline-online",
 ]
 PROD_EVIDENCE = ["production", "deployed", "real users", "at scale", "latency", "serving", "throughput"]
 MUST_HAVE_SKILLS = [
@@ -53,7 +61,7 @@ def title_fit(p: dict, hist: list) -> float:
         if base is None:
             base = max((w for k, w in AI_TITLES.items() if k in tl), default=0.0)
         # ML/AI token bonus for titles our map underrates (caps at 0.8 via tokens alone)
-        if any(tok in tl for tok in ML_TOKENS):
+        if _ML_TOKEN_RE.search(tl):
             base = max(base, 0.8)
         if any(j in tl for j in JUNIOR):     # seniority discount on the title itself
             base *= 0.5
@@ -66,15 +74,26 @@ def is_junior_title(p: dict) -> bool:
 
 
 def evidence_score(p: dict, hist: list) -> float:
-    """Recency-weighted IR/ranking/recsys evidence in prose; product roles weighted higher."""
+    """Recency-weighted IR/ranking/recsys evidence in prose; product roles weighted higher.
+
+    Identical descriptions pasted across multiple roles count ONCE (36% of the pool has exact
+    within-profile duplicates): one paragraph is one piece of evidence, however many job entries
+    it is pasted into. This rewards candidates with several DISTINCT described projects over
+    candidates repeating a single keyword-dense blurb."""
     score = 0.0
+    seen = set()
     for i, h in enumerate(hist):
+        d = h.get("description", "").lower().strip()
+        if not d or d in seen:                       # duplicate text adds no new evidence
+            continue
+        seen.add(d)
         w = math.exp(-0.25 * i)                      # most-recent role weighted most
-        d = h.get("description", "").lower()
         hits = sum(1 for e in EVIDENCE if e in d)
         prod = 1.3 if h.get("industry", "") != "IT Services" else 1.0
         score += w * hits * prod
-    score += 0.5 * sum(1 for e in EVIDENCE if e in p.get("summary", "").lower())
+    summ = p.get("summary", "").lower().strip()
+    if summ not in seen:                             # a summary that repeats a role blurb adds nothing
+        score += 0.5 * sum(1 for e in EVIDENCE if e in summ)
     return _clip(1 - math.exp(-score / 3.0))         # ~6 weighted hits -> ~1.0
 
 
