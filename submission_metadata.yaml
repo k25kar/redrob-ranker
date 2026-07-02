@@ -23,7 +23,7 @@ team_members:
 # Code and reproducibility
 # ============================================================================
 github_repo: "https://github.com/k25kar/redrob-ranker"
-sandbox_link: ""                  # HF Spaces / Streamlit / Colab / docker run — required
+sandbox_link: "https://colab.research.google.com/drive/1gA63MLgFwQVVkmK4BfPfXynLUTKTOPMk?usp=sharing"                  # HF Spaces / Streamlit / Colab / docker run — required
 
 reproduce_command: "python scripts/rank.py --candidates data/candidates.jsonl"
 # Writes outputs/submission.csv. No pre-build step, no index, no external model.
