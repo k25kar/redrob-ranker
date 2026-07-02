@@ -7,7 +7,7 @@ candidates.jsonl, and writes a JSONL sample the ranker can consume directly.
   python scripts/make_sample.py --input sample_candidates.json --out data/sample.jsonl
   python scripts/make_sample.py --input candidates.jsonl --n 100 --out data/sample.jsonl
 """
-import argparse, json
+import argparse, json, os
 
 
 def main():
@@ -30,6 +30,7 @@ def main():
                 if len(cands) >= a.n:
                     break
 
+    os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w") as f:
         for c in cands:
             f.write(json.dumps(c) + "\n")
