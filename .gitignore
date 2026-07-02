@@ -1,5 +1,6 @@
 # Data (large; never commit)
 data/candidates.jsonl
+data/sample.jsonl
 candidates.jsonl
 
 # Generated locally; only the final submission is committed

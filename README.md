@@ -55,8 +55,14 @@ redrob_ranker/          the code
 scripts/
   rank.py               the ranking step: writes outputs/submission.csv  (this is all you need)
   verify.py             sanity checks: dataset hash, row count, output format
+  make_sample.py        small candidate sample for the sandbox demo
+
+sandbox/
+  sandbox.ipynb         Colab notebook: runs the ranker end-to-end on a <=100-candidate sample
+  sample_candidates.json  the challenge bundle's 50-candidate sample
 
 config.yaml             every knob in one place (weights, thresholds)
+submission_metadata.yaml  submission metadata (spec section 10.3)
 data/                   put candidates.jsonl here (not committed, ~487 MB)
 outputs/                submission.csv
 ```

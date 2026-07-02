@@ -1,0 +1,84 @@
+# Redrob Hackathon — Submission Metadata
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "Evangelion"
+
+primary_contact:
+  name: "Karthik Suryanarayanan"
+  email: "s.karthik.suryanarayanan@gmail.com"
+  phone: "+91-8240851828"
+
+team_members:
+  - name: "Karthik Suryanarayanan"
+    email: "karthik.suryanarayanan@elastic.run"
+    role: "Team Lead / ML Student / Designer"
+    
+  - name: "S K Deeraj"
+    email: "deerajsk2006@gmail.com"
+    role: "ML Student / Designer"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/k25kar/redrob-ranker"
+sandbox_link: ""                  # HF Spaces / Streamlit / Colab / docker run — required
+
+reproduce_command: "python scripts/rank.py --candidates data/candidates.jsonl"
+# Writes outputs/submission.csv. No pre-build step, no index, no external model.
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "MacBook Pro M2 & Acer Nitro 5"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.11"
+  os: "MacOS & Windows 11"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude as an engineering assistant throughout: architecture discussion, code review,
+  implementing scoring changes, and building the internal evaluation harness (hand-labeled
+  benchmark, baseline comparisons, LLM-as-judge audit of the shipped ranking's 11-160 band).
+  All design decisions, trade-offs, and label verification were reviewed and owned by the team.
+  The ranking step itself is plain Python — no LLM, no network, no GPU at rank time.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  Embedding-free, fully deterministic rule ranker built around evidence-over-keywords: the
+  dominant signal is described production retrieval/ranking/recsys work in career history,
+  with duplicated role descriptions counted once and plain-language IR phrasing ("relevance",
+  "user intent", "re-ranking") scored alongside buzzwords. Title fit, experience band (soft
+  penalty beyond 11y), corroborated skills (discounted on stuffer inconsistency), and education
+  support but never override evidence. A hard gate removes arithmetically impossible histories
+  (tenure sum >> stated experience); keyword-stuffer, consulting-only, research-only and
+  domain-mismatch patterns are soft, capped penalties. Availability (response rate, recency,
+  open-to-work), location/notice fit, and identity verification apply as small bounded
+  multipliers; near-ties are refined by JD-stated qualities (eval rigor, seniority, ownership,
+  impact). Validated against a method-blind hand-labeled benchmark plus an independent
+  LLM-recruiter audit of ranks 11-160; honeypot rate in top-100 is zero. Runs in ~40s on a
+  laptop CPU, single command, byte-identical output across runs.
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

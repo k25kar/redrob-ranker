@@ -109,7 +109,7 @@ def build_reasoning(rank, cid, title, yoe, rs, comps, reasons, phrases):
     else:
         core = "strong AI/ML title and skills profile, but lighter explicit retrieval/ranking evidence"
 
-    v = num % 4   # deterministic structural variety
+    v = num % 8   # deterministic structural variety
     who = f"{title}, {yoe:.1f}y"
     if v == 0:
         s = f"{who}: {core}."
@@ -123,10 +123,25 @@ def build_reasoning(rank, cid, title, yoe, rs, comps, reasons, phrases):
         s = f"{yoe:.1f} years, currently {title} — {core}."
         if avail:
             s += f" Engagement signals look good: {avail}."
-    else:
+    elif v == 3:
         s = f"Fit driven by evidence, not keywords: {core} ({who})."
         if avail:
             s += f" {avail[0].upper() + avail[1:]}."
+    elif v == 4:
+        s = f"{core[0].upper() + core[1:]}. {who}"
+        s += f"; {avail}." if avail else "."
+    elif v == 5:
+        s = f"{title} with {yoe:.1f} years; {core}."
+        if avail:
+            s += f" On the practical side: {avail}."
+    elif v == 6:
+        s = f"The work is the argument here: {core}. {who}."
+        if avail:
+            s += f" {avail[0].upper() + avail[1:]}."
+    else:
+        s = f"{who}. {core[0].upper() + core[1:]}."
+        if avail:
+            s += f" Signals: {avail}."
 
     if concerns:
         s += " Concerns: " + "; ".join(concerns[:3]) + "."
